@@ -1,0 +1,298 @@
+openapi: 3.0.0
+info:
+  title: Containify API
+  version: 1.0.0
+  description: API for Containify
+
+servers:
+  - url: https://api.containify.io
+
+components:
+  schemas:
+    Migration:
+      type: object
+      properties:
+        migrationId:
+          type: string
+        current:
+          $ref: "#/components/schemas/Tag"
+        target:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+
+        owner:
+          $ref: "#/components/schemas/Owner"
+        vuls:
+          $ref: "#/components/schemas/Vulnerabilities"
+        code:
+          $ref: "#/components/schemas/Code"
+        expandable:
+          type: boolean
+        _type:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Migration'
+    Tag:
+      type: object
+      properties:
+        repo:
+          type: string
+        image:
+          type: string
+        tag:
+          type: string
+
+    Owner:
+      type: object
+      properties:
+        email:
+          type: string
+        slack:
+          type: string
+
+    Vulnerabilities:
+      type: object
+      properties:
+        critical:
+          type: integer
+        high:
+          type: integer
+        medium:
+          type: integer
+        low:
+          type: integer
+
+    Code:
+      type: object
+      properties:
+        path:
+          type: string
+        autogen:
+          type: boolean
+
+paths:
+  /migration:
+    post:
+      summary: Create Migration
+      description: Create a migration by providing repository, image, and tag.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repo:
+                  type: string
+                image:
+                  type: string
+                tag:
+                  type: string
+      responses:
+        "200":
+          description: Successful migration creation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Migration"
+    get:
+      summary: Get Migration
+      description: Get details of a migration using its identifier.
+      parameters:
+        - name: migration
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful retrieval of migration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Migration"
+    patch:
+      summary: Update Migration
+      description: Update a migration by providing an action and value.
+      parameters:
+        - name: migration
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: action
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: value
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful update of migration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Migration"
+
+  /registrygraph:
+    get:
+      summary: Get Image List
+      description: Get a list of images with optional pagination and search filters.
+      parameters:
+        - name: pageNo
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: repo
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: image
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hasParent
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: noOfChildren
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Successful retrieval of image list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    repo:
+                      type: string
+                    image:
+                      type: string
+                    tag:
+                      type: string
+                    hash:
+                      type: string
+                    hasParent:
+                      type: boolean
+                    noOfChildren:
+                      type: integer
+
+  /registrygraph/getchildren:
+    get:
+      summary: Get Childrens
+      description: Get a list of immediate children images for a given image.
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: image
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: tag
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: pageNo
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Successful retrieval of children images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    repo:
+                      type: string
+                    image:
+                      type: string
+                    tag:
+                      type: string
+                    hash:
+                      type: string
+                    hasParent:
+                      type: boolean
+                    noOfChildren:
+                      type: integer
+  /registrygraph/getparent:
+    get:
+      summary: Get Parent Image
+      description: Get the parent image for a given image.
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: image
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: tag
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful retrieval of parent image
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  repo:
+                    type: string
+                  image:
+                    type: string
+                  tag:
+                    type: string
+                  hash:
+                    type: string
+                  hasParent:
+                    type: boolean
+                  noOfChildren:
+                    type: integer
